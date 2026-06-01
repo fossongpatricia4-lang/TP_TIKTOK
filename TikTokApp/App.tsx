@@ -1,45 +1,59 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
+ * TikTok Clone — App.tsx
+ * Chef de projet : Patricia
+ * Point d'entree principal de l'application
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+// Navigation
+import AppNavigator from './src/navigation/AppNavigator';
+import AuthNavigator from './src/navigation/AuthNavigator';
+
+// Loading screen
+import LoadingScreen from './src/screens/LoadingScreen';
+
+const Stack = createStackNavigator();
+
+const App = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Ecouter les changements d'etat d'authentification Firebase
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+
+    // Nettoyage quand le composant se demonte
+    return () => unsubscribe();
+  }, []);
+
+  // Afficher un ecran de chargement pendant la verification auth
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <NavigationContainer>
+        {user ? (
+          // Utilisateur connecte -> ecrans principaux
+          <AppNavigator />
+        ) : (
+          // Utilisateur non connecte -> ecrans d'authentification
+          <AuthNavigator />
+        )}
+      </NavigationContainer>
+    </>
   );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+};
 
 export default App;
