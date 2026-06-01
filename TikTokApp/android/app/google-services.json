@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374478252228",
+    "project_id": "tiktok-80",
+    "storage_bucket": "tiktok-80.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374478252228:android:7ab445e407e6af7b090191",
+        "android_client_info": {
+          "package_name": "com.TP_TIKTOK"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiYv8N4sdMBl286g5pmjOvfaKoUkdXorU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
