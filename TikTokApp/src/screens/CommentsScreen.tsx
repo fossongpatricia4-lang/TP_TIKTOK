@@ -1,19 +1,19 @@
 /**
- * TikTok Clone — RegisterScreen.tsx
- * PLACEHOLDER — A completer par Dev 2
+ * TikTok Clone — CommentsScreen.tsx
+ * PLACEHOLDER — A completer par Dev 5
  * Ce fichier est cree par le chef de projet pour que
  * la navigation fonctionne des le debut
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../utils/theme';
+import { COLORS } from '../styles/theme';
 
-const RegisterScreen = () => {
+const CommentsScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>🔐 Authentification</Text>
-      <Text style={styles.sub}>A completer par Dev 2</Text>
+      <Text style={styles.text}>💬 Commentaires</Text>
+      <Text style={styles.sub}>A completer par Dev 5</Text>
     </View>
   );
 };
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   sub: { color: COLORS.lightGray, fontSize: 14, marginTop: 10 },
 });
 
-export default RegisterScreen;
+export default CommentsScreen;

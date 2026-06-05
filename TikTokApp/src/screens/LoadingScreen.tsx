@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { COLORS } from '../utils/theme';
+import { COLORS } from '../styles/theme';
 
 const LoadingScreen = () => {
   return (
