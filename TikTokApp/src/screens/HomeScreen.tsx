@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../utils/theme';
+import { COLORS } from '../styles/theme';
 
 const HomeScreen = () => {
   return (

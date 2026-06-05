@@ -9,7 +9,7 @@ import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { auth } from './src/config/firebaseconfig';
 
 // Navigation
 import AppNavigator from './src/navigation/AppNavigator';

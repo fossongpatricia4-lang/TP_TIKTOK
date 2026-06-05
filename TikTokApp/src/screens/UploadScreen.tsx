@@ -1,19 +1,19 @@
 /**
- * TikTok Clone — LoginScreen.tsx
- * PLACEHOLDER — A completer par Dev 2
+ * TikTok Clone — UploadScreen.tsx
+ * PLACEHOLDER — A completer par Dev 4
  * Ce fichier est cree par le chef de projet pour que
  * la navigation fonctionne des le debut
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../utils/theme';
+import { COLORS } from '../styles/theme';
 
-const LoginScreen = () => {
+const UploadScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>🔐 Authentification</Text>
-      <Text style={styles.sub}>A completer par Dev 2</Text>
+      <Text style={styles.text}>⬆️ Upload de video</Text>
+      <Text style={styles.sub}>A completer par Dev 4</Text>
     </View>
   );
 };
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   sub: { color: COLORS.lightGray, fontSize: 14, marginTop: 10 },
 });
 
-export default LoginScreen;
+export default UploadScreen;
