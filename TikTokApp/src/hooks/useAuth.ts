@@ -12,7 +12,7 @@ import {
   User,
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../../firebaseConfig';
+import { auth, db } from '../config/firebaseconfig';
 
 interface AuthState {
   loading: boolean;

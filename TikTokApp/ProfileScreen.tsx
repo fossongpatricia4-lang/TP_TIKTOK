@@ -7,6 +7,7 @@
  *  - Grille 3 colonnes des videos de l'utilisateur
  *  - Modifier nom, bio (TextInput)
  *  - Sauvegarder avec updateDoc dans Firestore
+ *  - Distinguer son propre profil des autres
  *  - Deconnexion
  */
 
@@ -38,8 +39,10 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '../config/firebaseconfig';
-import { COLORS, FONTS, SPACING, BORDER_RADIUS } from '../styles/theme';
+import { auth, db } from './src/config/firebaseconfig';
+import { COLORS, FONTS, SPACING, BORDER_RADIUS } from './src/styles/theme';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface UserProfile {
   uid: string;
@@ -61,20 +64,35 @@ interface VideoItem {
   createdAt: any;
 }
 
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const GRID_ITEM_SIZE = (SCREEN_WIDTH - 4) / 3;
+const GRID_ITEM_SIZE = (SCREEN_WIDTH - 4) / 3; // 3 colonnes avec 2px de gap
+
+// ─── Composant principal ─────────────────────────────────────────────────────
 
 const ProfileScreen = () => {
+  // Utilisateur Firebase connecte
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Donnees du profil Firestore
   const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Videos de l'utilisateur
   const [videos, setVideos] = useState<VideoItem[]>([]);
+
+  // Etats de chargement
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Modal d'edition du profil
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editUsername, setEditUsername] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editProfilePic, setEditProfilePic] = useState('');
+
+  // ── Ecouter l'utilisateur connecte ────────────────────────────────────────
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -82,6 +100,8 @@ const ProfileScreen = () => {
     });
     return unsubscribe;
   }, []);
+
+  // ── Charger le profil depuis Firestore ────────────────────────────────────
 
   const loadProfile = useCallback(async (uid: string) => {
     setLoadingProfile(true);
@@ -105,18 +125,27 @@ const ProfileScreen = () => {
     }
   }, []);
 
+  // ── Charger les videos de l'utilisateur ──────────────────────────────────
+
   const loadVideos = useCallback(async (uid: string) => {
     setLoadingVideos(true);
     try {
       const videosRef = collection(db, 'videos');
-      const q = query(videosRef, where('userId', '==', uid), orderBy('createdAt', 'desc'));
+      const q = query(
+        videosRef,
+        where('userId', '==', uid),
+        orderBy('createdAt', 'desc')
+      );
       const querySnap = await getDocs(q);
+
       const fetchedVideos: VideoItem[] = querySnap.docs.map((d) => ({
         id: d.id,
         ...(d.data() as Omit<VideoItem, 'id'>),
       }));
+
       setVideos(fetchedVideos);
     } catch (error: any) {
+      // Si index Firestore manquant, charger sans tri
       try {
         const videosRef = collection(db, 'videos');
         const q = query(videosRef, where('userId', '==', uid));
@@ -134,6 +163,8 @@ const ProfileScreen = () => {
     }
   }, []);
 
+  // ── Declencher le chargement quand l'utilisateur est connu ───────────────
+
   useEffect(() => {
     if (currentUser?.uid) {
       loadProfile(currentUser.uid);
@@ -141,12 +172,16 @@ const ProfileScreen = () => {
     }
   }, [currentUser, loadProfile, loadVideos]);
 
+  // ── Sauvegarder les modifications du profil ───────────────────────────────
+
   const handleSaveProfile = async () => {
     if (!currentUser?.uid) return;
+
     if (!editUsername.trim()) {
-      Alert.alert('Erreur', "Le nom d'utilisateur ne peut pas etre vide.");
+      Alert.alert('Erreur', 'Le nom d\'utilisateur ne peut pas etre vide.');
       return;
     }
+
     setSavingProfile(true);
     try {
       const userRef = doc(db, 'users', currentUser.uid);
@@ -155,6 +190,8 @@ const ProfileScreen = () => {
         bio: editBio.trim(),
         profilePic: editProfilePic.trim(),
       });
+
+      // Mettre a jour l'etat local
       setProfile((prev) =>
         prev
           ? {
@@ -165,6 +202,7 @@ const ProfileScreen = () => {
             }
           : prev
       );
+
       setEditModalVisible(false);
       Alert.alert('✅ Succes', 'Profil mis a jour !');
     } catch (error: any) {
@@ -174,22 +212,30 @@ const ProfileScreen = () => {
     }
   };
 
+  // ── Deconnexion ───────────────────────────────────────────────────────────
+
   const handleLogout = () => {
-    Alert.alert('Deconnexion', 'Voulez-vous vraiment vous deconnecter ?', [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Deconnecter',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut(auth);
-          } catch (error: any) {
-            Alert.alert('Erreur', error.message);
-          }
+    Alert.alert(
+      'Deconnexion',
+      'Voulez-vous vraiment vous deconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Deconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut(auth);
+            } catch (error: any) {
+              Alert.alert('Erreur', error.message);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
+
+  // ── Rendu d'un element de la grille de videos ────────────────────────────
 
   const renderVideoItem = ({ item }: { item: VideoItem }) => (
     <TouchableOpacity
@@ -198,17 +244,24 @@ const ProfileScreen = () => {
       onPress={() => Alert.alert('Video', item.description || 'Pas de description')}
     >
       {item.thumbnailUrl ? (
-        <Image source={{ uri: item.thumbnailUrl }} style={styles.gridImage} resizeMode="cover" />
+        <Image
+          source={{ uri: item.thumbnailUrl }}
+          style={styles.gridImage}
+          resizeMode="cover"
+        />
       ) : (
         <View style={styles.gridPlaceholder}>
           <Text style={styles.gridPlaceholderIcon}>🎬</Text>
         </View>
       )}
+      {/* Nombre de likes en bas a gauche */}
       <View style={styles.gridLikes}>
         <Text style={styles.gridLikesText}>❤️ {item.likesCount || 0}</Text>
       </View>
     </TouchableOpacity>
   );
+
+  // ── Etat de chargement initial ────────────────────────────────────────────
 
   if (loadingProfile) {
     return (
@@ -227,9 +280,17 @@ const ProfileScreen = () => {
     );
   }
 
+  // ── Rendu principal ───────────────────────────────────────────────────────
+
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[]}>
+
+      {/* ── En-tete du profil ── */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[]} // pas de header collant
+      >
+        {/* Barre superieure */}
         <View style={styles.topBar}>
           <Text style={styles.topBarUsername}>@{profile.username}</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
@@ -237,7 +298,9 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Photo + stats */}
         <View style={styles.profileHeader}>
+          {/* Photo de profil */}
           <View style={styles.avatarContainer}>
             {profile.profilePic ? (
               <Image
@@ -254,6 +317,7 @@ const ProfileScreen = () => {
             )}
           </View>
 
+          {/* Stats : videos / followers / following */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{videos.length}</Text>
@@ -270,6 +334,7 @@ const ProfileScreen = () => {
           </View>
         </View>
 
+        {/* Nom et bio */}
         <View style={styles.bioSection}>
           <Text style={styles.displayName}>{profile.username}</Text>
           {profile.bio ? (
@@ -279,6 +344,7 @@ const ProfileScreen = () => {
           )}
         </View>
 
+        {/* Bouton Modifier le profil */}
         <TouchableOpacity
           style={styles.editBtn}
           onPress={() => {
@@ -292,12 +358,17 @@ const ProfileScreen = () => {
           <Text style={styles.editBtnText}>Modifier le profil</Text>
         </TouchableOpacity>
 
+        {/* Separateur */}
         <View style={styles.separator} />
 
+        {/* Titre de la grille */}
         <View style={styles.gridHeader}>
-          <Text style={styles.gridHeaderText}>🎬 Mes videos ({videos.length})</Text>
+          <Text style={styles.gridHeaderText}>
+            🎬 Mes videos ({videos.length})
+          </Text>
         </View>
 
+        {/* Grille des videos */}
         {loadingVideos ? (
           <View style={styles.centered}>
             <ActivityIndicator size="small" color={COLORS.primary} />
@@ -306,7 +377,9 @@ const ProfileScreen = () => {
           <View style={styles.emptyVideos}>
             <Text style={styles.emptyVideosIcon}>📭</Text>
             <Text style={styles.emptyVideosText}>Aucune video publiee</Text>
-            <Text style={styles.emptyVideosSub}>Publie ta premiere video depuis l'onglet +</Text>
+            <Text style={styles.emptyVideosSub}>
+              Publie ta premiere video depuis l'onglet +
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -314,15 +387,17 @@ const ProfileScreen = () => {
             renderItem={renderVideoItem}
             keyExtractor={(item) => item.id}
             numColumns={3}
-            scrollEnabled={false}
+            scrollEnabled={false} // ScrollView parent gere le scroll
             columnWrapperStyle={styles.gridRow}
             contentContainerStyle={styles.gridContainer}
           />
         )}
 
+        {/* Espace en bas */}
         <View style={{ height: 40 }} />
       </ScrollView>
 
+      {/* ── Modal de modification du profil ── */}
       <Modal
         visible={editModalVisible}
         animationType="slide"
@@ -334,6 +409,7 @@ const ProfileScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalContainer}>
+            {/* Titre modal */}
             <View style={styles.modalHeader}>
               <TouchableOpacity
                 onPress={() => setEditModalVisible(false)}
@@ -356,6 +432,7 @@ const ProfileScreen = () => {
             </View>
 
             <ScrollView style={styles.modalBody}>
+              {/* Champ : Nom d'utilisateur */}
               <Text style={styles.inputLabel}>Nom d'utilisateur</Text>
               <TextInput
                 style={styles.input}
@@ -367,6 +444,7 @@ const ProfileScreen = () => {
                 maxLength={30}
               />
 
+              {/* Champ : Bio */}
               <Text style={styles.inputLabel}>Bio</Text>
               <TextInput
                 style={[styles.input, styles.inputMultiline]}
@@ -380,6 +458,7 @@ const ProfileScreen = () => {
               />
               <Text style={styles.charCount}>{editBio.length}/150</Text>
 
+              {/* Champ : URL photo de profil */}
               <Text style={styles.inputLabel}>URL de la photo de profil</Text>
               <TextInput
                 style={styles.input}
@@ -408,11 +487,15 @@ const ProfileScreen = () => {
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.black,
   },
+
+  // ── Etats speciaux
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -429,6 +512,8 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontSize: FONTS.sizes.lg,
   },
+
+  // ── Barre superieure
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -453,6 +538,8 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontSize: FONTS.sizes.sm,
   },
+
+  // ── En-tete profil
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -502,6 +589,8 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.xs,
     marginTop: 2,
   },
+
+  // ── Bio
   bioSection: {
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
@@ -522,6 +611,8 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     fontStyle: 'italic',
   },
+
+  // ── Bouton modifier
   editBtn: {
     marginHorizontal: SPACING.md,
     marginBottom: SPACING.md,
@@ -537,11 +628,15 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
   },
+
+  // ── Separateur
   separator: {
     height: 1,
     backgroundColor: COLORS.border,
     marginBottom: SPACING.sm,
   },
+
+  // ── Grille videos
   gridHeader: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
@@ -591,6 +686,8 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: FONTS.sizes.xs,
   },
+
+  // ── Etat vide videos
   emptyVideos: {
     alignItems: 'center',
     paddingVertical: SPACING.xxl,
@@ -611,6 +708,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: SPACING.xl,
   },
+
+  // ── Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -655,6 +754,8 @@ const styles = StyleSheet.create({
   modalBody: {
     padding: SPACING.md,
   },
+
+  // ── Inputs
   inputLabel: {
     color: COLORS.lightGray,
     fontSize: FONTS.sizes.sm,
@@ -683,6 +784,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 4,
   },
+
+  // ── Apercu photo
   previewContainer: {
     marginTop: SPACING.sm,
     alignItems: 'center',
