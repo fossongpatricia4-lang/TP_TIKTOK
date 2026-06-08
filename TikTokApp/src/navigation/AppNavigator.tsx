@@ -1,13 +1,16 @@
 /**
  * TikTok Clone — AppNavigator.tsx
- * Navigation principale (utilisateur connecte)
- * Dev 7 peut modifier/enrichir ce fichier
+ * Navigation principale (utilisateur connecté)
+ * Dev 7 : structure et routes
+ * Dev 8 : icônes et styles appliqués depuis theme.ts
  */
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
+
+// Theme
+import { COLORS, DIMENSIONS, SPACING, ICONS } from '../styles/theme';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -18,7 +21,6 @@ import CommentsScreen from '../screens/CommentsScreen';
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
 
-// Stack pour Home (Home + Commentaires)
 const HomeStackNavigator = () => (
   <HomeStack.Navigator screenOptions={{ headerShown: false }}>
     <HomeStack.Screen name="Feed" component={HomeScreen} />
@@ -26,29 +28,28 @@ const HomeStackNavigator = () => (
   </HomeStack.Navigator>
 );
 
-// Navigation par onglets principale
 const AppNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#000000',
-          borderTopColor: '#222222',
-          height: 60,
-          paddingBottom: 8,
+          backgroundColor: COLORS.black,
+          borderTopColor: COLORS.border,
+          height: DIMENSIONS.tabBarHeight,
+          paddingBottom: SPACING.sm,
         },
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#888888',
+        tabBarActiveTintColor: COLORS.white,
+        tabBarInactiveTintColor: COLORS.lightGray,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
+            iconName = focused ? ICONS.home : ICONS.homeOutline;
           } else if (route.name === 'Upload') {
-            iconName = focused ? 'add-circle' : 'add-circle-outline';
+            iconName = focused ? ICONS.upload : ICONS.uploadOutline;
           } else {
-            iconName = focused ? 'person' : 'person-outline';
+            iconName = focused ? ICONS.profile : ICONS.profileOutline;
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
