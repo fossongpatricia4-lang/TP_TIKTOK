@@ -65,7 +65,8 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      navigation.replace('Home');
+      // Firebase va déclencher onAuthStateChanged dans App.tsx
+      // qui basculera automatiquement vers AppNavigator
     } catch (err: any) {
       setError(getFirebaseErrorMessage(err.code));
       triggerShake();
