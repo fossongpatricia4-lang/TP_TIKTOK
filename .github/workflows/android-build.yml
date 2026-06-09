@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - final-mvp
   pull_request:
     branches:
       - main
+      - final-mvp
 
 jobs:
   build:
