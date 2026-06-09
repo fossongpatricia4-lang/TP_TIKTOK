@@ -1,32 +1,293 @@
 /**
  * TikTok Clone — CommentsScreen.tsx
- * PLACEHOLDER — A completer par Dev 5
- * Ce fichier est cree par le chef de projet pour que
- * la navigation fonctionne des le debut
+ * Bottom sheet modal pour afficher les commentaires (comme TikTok)
+ * Intégration Firebase pour l'ajout et l'affichage des commentaires
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { forwardRef, useMemo, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
+import BottomSheet from 'react-native-bottom-sheet';
+import { auth } from '../config/firebaseconfig';
+import { addComment, getCommentsByVideo } from '../services/interactionService';
 import { COLORS } from '../styles/theme';
 
-const CommentsScreen = () => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>💬 Commentaires</Text>
-      <Text style={styles.sub}>A completer par Dev 5</Text>
+interface CommentsScreenProps {
+  videoId: string;
+}
+
+const CommentsScreen = forwardRef<any, CommentsScreenProps>(({ videoId }, ref) => {
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const snapPoints = useMemo(() => ['50%', '85%'], []);
+
+  // Charger les commentaires au montage ou quand videoId change
+  useEffect(() => {
+    if (videoId) {
+      loadComments();
+    }
+  }, [videoId]);
+
+  const loadComments = async () => {
+    try {
+      setLoading(true);
+      const fetchedComments = await getCommentsByVideo(videoId);
+      setComments(fetchedComments);
+    } catch (error) {
+      console.error('Erreur lors du chargement des commentaires:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !auth.currentUser) return;
+
+    try {
+      setIsSubmitting(true);
+      const userData = {
+        userId: auth.currentUser.uid,
+        username: auth.currentUser.displayName || 'Utilisateur',
+        profilePic: auth.currentUser.photoURL || 'https://via.placeholder.com/32',
+      };
+
+      await addComment(videoId, userData, newComment);
+      setNewComment('');
+      
+      // Recharger les commentaires
+      await loadComments();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatTimestamp = (firebaseTimestamp: any) => {
+    if (!firebaseTimestamp) return 'À l\'instant';
+    
+    const now = new Date();
+    const commentDate = firebaseTimestamp.toDate?.() || new Date(firebaseTimestamp);
+    const diffMs = now.getTime() - commentDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `${diffMins}m`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}j`;
+  };
+
+  const renderComment = ({ item }: any) => (
+    <View style={styles.commentItem}>
+      <Image source={{ uri: item.profilePic }} style={styles.avatar} />
+      <View style={styles.commentContent}>
+        <View style={styles.headerRow}>
+          <Text style={styles.author}>{item.username}</Text>
+          <Text style={styles.timestamp}>{formatTimestamp(item.createdAt)}</Text>
+        </View>
+        <Text style={styles.commentText}>{item.text}</Text>
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.likeButton}>
+            <Text style={styles.likeIcon}>❤️</Text>
+            <Text style={styles.likeCount}>{item.likesCount || 0}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Text style={styles.replyText}>Répondre</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
-};
+
+  return (
+    <BottomSheet ref={ref} snapPoints={snapPoints} enablePanDownToClose>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>💬 {comments.length} commentaires</Text>
+        </View>
+
+        {/* Liste des commentaires */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.white} />
+          </View>
+        ) : (
+          <FlatList
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={item => item.id}
+            scrollEnabled={true}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Aucun commentaire pour le moment</Text>
+              </View>
+            }
+          />
+        )}
+
+        {/* Input pour ajouter un commentaire */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ajouter un commentaire..."
+            placeholderTextColor={COLORS.lightGray}
+            value={newComment}
+            onChangeText={setNewComment}
+            editable={!isSubmitting}
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, isSubmitting && styles.sendButtonDisabled]}
+            onPress={handleAddComment}
+            disabled={isSubmitting || !newComment.trim()}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.sendIcon}>➤</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </BottomSheet>
+  );
+});
+
+CommentsScreen.displayName = 'CommentsScreen';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.black,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#333',
+  },
+  headerTitle: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  listContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  author: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  timestamp: {
+    color: COLORS.lightGray,
+    fontSize: 12,
+  },
+  commentText: {
+    color: COLORS.white,
+    fontSize: 14,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  likeIcon: {
+    fontSize: 16,
+  },
+  likeCount: {
+    color: COLORS.lightGray,
+    fontSize: 12,
+  },
+  replyText: {
+    color: COLORS.lightGray,
+    fontSize: 12,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: { color: COLORS.white, fontSize: 24, fontWeight: 'bold' },
-  sub: { color: COLORS.lightGray, fontSize: 14, marginTop: 10 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: COLORS.lightGray,
+    fontSize: 14,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: '#333',
+    marginBottom: 12,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: COLORS.white,
+    fontSize: 14,
+  },
+  sendButton: {
+    marginLeft: 8,
+    padding: 8,
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+  sendIcon: {
+    fontSize: 20,
+  },
 });
 
 export default CommentsScreen;

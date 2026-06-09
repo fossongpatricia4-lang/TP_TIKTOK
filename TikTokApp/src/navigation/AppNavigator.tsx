@@ -6,25 +6,14 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import UploadScreen from '../screens/UploadScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import CommentsScreen from '../screens/CommentsScreen';
 
 const Tab = createBottomTabNavigator();
-const HomeStack = createStackNavigator();
-
-// Stack pour Home (Home + Commentaires)
-const HomeStackNavigator = () => (
-  <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-    <HomeStack.Screen name="Feed" component={HomeScreen} />
-    <HomeStack.Screen name="Comments" component={CommentsScreen} />
-  </HomeStack.Navigator>
-);
 
 // Navigation par onglets principale
 const AppNavigator = () => {
@@ -57,7 +46,7 @@ const AppNavigator = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeStackNavigator}
+        component={HomeScreen}
         options={{ tabBarLabel: 'Accueil' }}
       />
       <Tab.Screen
