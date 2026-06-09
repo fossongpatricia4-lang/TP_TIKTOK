@@ -3,7 +3,7 @@
  * Chef de projet : Patricia
  * Point d'entree principal de l'application
  */
-
+import { COLORS } from './src/styles/theme';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -42,7 +42,7 @@ const App = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.black} />
       <NavigationContainer>
         {user ? (
           // Utilisateur connecte -> ecrans principaux
