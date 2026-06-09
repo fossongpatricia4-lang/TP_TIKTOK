@@ -6,6 +6,10 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+<<<<<<< Updated upstream
+=======
+import { createStackNavigator } from '@react-navigation/stack';
+>>>>>>> Stashed changes
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Screens
