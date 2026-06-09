@@ -15,7 +15,6 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-// Navigation par onglets principale
 const AppNavigator = () => {
   return (
     <Tab.Navigator
