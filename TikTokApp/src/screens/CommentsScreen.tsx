@@ -4,7 +4,7 @@
  * Intégration Firebase pour l'ajout et l'affichage des commentaires
  */
 
-import React, { forwardRef, useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,22 +14,24 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
-import BottomSheet from 'react-native-bottom-sheet';
 import { auth } from '../config/firebaseconfig';
 import { addComment, getCommentsByVideo } from '../services/interactionService';
 import { COLORS } from '../styles/theme';
 
 interface CommentsScreenProps {
   videoId: string;
+  visible: boolean;
+  onClose: () => void;
 }
 
-const CommentsScreen = forwardRef<any, CommentsScreenProps>(({ videoId }, ref) => {
+const CommentsScreen = ({ videoId, visible, onClose }: CommentsScreenProps) => {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const snapPoints = useMemo(() => ['50%', '85%'], []);
 
   // Charger les commentaires au montage ou quand videoId change
   useEffect(() => {
@@ -114,11 +116,16 @@ const CommentsScreen = forwardRef<any, CommentsScreenProps>(({ videoId }, ref) =
   );
 
   return (
-    <BottomSheet ref={ref} snapPoints={snapPoints} enablePanDownToClose>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.overlay} onPress={onClose} />
+      <View style={styles.sheet}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>💬 {comments.length} commentaires</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={styles.closeButton}>✕</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Liste des commentaires */}
@@ -164,18 +171,30 @@ const CommentsScreen = forwardRef<any, CommentsScreenProps>(({ videoId }, ref) =
           </TouchableOpacity>
         </View>
       </View>
-    </BottomSheet>
+      </View>
+    </Modal>
   );
-});
-
-CommentsScreen.displayName = 'CommentsScreen';
+};
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sheet: {
+    maxHeight: '85%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    overflow: 'hidden',
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.black,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 0.5,
@@ -185,6 +204,11 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  closeButton: {
+    color: COLORS.lightGray,
+    fontSize: 18,
+    padding: 4,
   },
   listContent: {
     paddingHorizontal: 12,

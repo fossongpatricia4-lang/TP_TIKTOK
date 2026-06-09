@@ -7,7 +7,6 @@ import { COLORS } from './src/styles/theme';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './src/config/firebaseconfig';
 
@@ -17,8 +16,6 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 
 // Loading screen
 import LoadingScreen from './src/screens/LoadingScreen';
-
-const Stack = createStackNavigator();
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);

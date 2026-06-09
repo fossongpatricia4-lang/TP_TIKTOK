@@ -261,7 +261,7 @@ export const commonStyles = StyleSheet.create({
 
   // ── Overlay vidéo ───────────────────────
   videoOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.overlay,
   },
 

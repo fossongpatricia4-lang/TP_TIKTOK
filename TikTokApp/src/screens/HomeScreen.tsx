@@ -4,7 +4,7 @@
  * Intégration Firebase pour les likes et les commentaires
  */
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,7 +46,6 @@ const MOCK_VIDEOS = [
 ];
 
 const HomeScreen = () => {
-  const bottomSheetRef = useRef<any>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [videoLikeCounts, setVideoLikeCounts] = useState<{ [key: string]: number }>({});
@@ -62,7 +61,6 @@ const HomeScreen = () => {
 
   const handleOpenComments = (videoId: string) => {
     setSelectedVideoId(videoId);
-    bottomSheetRef.current?.expand?.();
   };
 
   const handleLike = async (videoId: string) => {
@@ -181,7 +179,11 @@ const HomeScreen = () => {
 
       {/* Bottom Sheet pour les commentaires */}
       {selectedVideoId && (
-        <CommentsScreen ref={bottomSheetRef} videoId={selectedVideoId} />
+        <CommentsScreen
+          videoId={selectedVideoId}
+          visible={!!selectedVideoId}
+          onClose={() => setSelectedVideoId(null)}
+        />
       )}
     </View>
   );
