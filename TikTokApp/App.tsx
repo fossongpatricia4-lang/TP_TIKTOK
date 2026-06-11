@@ -1,13 +1,8 @@
-/**
- * TikTok Clone — App.tsx
- * Chef de projet : Patricia
- * Point d'entree principal de l'application
- */
 
+import { COLORS } from './src/styles/theme';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './src/config/firebaseconfig';
 
@@ -17,8 +12,6 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 
 // Loading screen
 import LoadingScreen from './src/screens/LoadingScreen';
-
-const Stack = createStackNavigator();
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,7 +35,7 @@ const App = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.black} />
       <NavigationContainer>
         {user ? (
           // Utilisateur connecte -> ecrans principaux

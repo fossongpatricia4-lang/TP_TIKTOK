@@ -1,0 +1,339 @@
+Guide Complet
+
+Clone TikTok
+
+React Native CLI + Firebase
+Guide de developpement pour equipe de 8 personnes
+Instructions completes etape par etape - En Francais
+
+Equipe : 8 developpeurs
+
+Stack : React Native CLI
+
+DB : Firebase
+
+1. Comprendre ce qu'on va construire
+On va creer un clone de TikTok avec React Native CLI. C'est une application mobile multiplateforme (iOS
+& Android) avec une interface graphique complete. L'utilisateur voit les videos sur son telephone, peut les
+uploader, liker, commenter et gerer son profil.
+Ce que l'application React Native va pouvoir faire :
+• S'inscrire et se connecter (Firebase Authentication)
+• Voir un fil de videos en defilement vertical (comme TikTok)
+• Uploader une video depuis la galerie ou la camera
+• Liker et commenter une video
+• Voir et modifier son profil utilisateur
+• Suivre d'autres utilisateurs
+• Notifications push (Firebase Cloud Messaging)
+
+2. L'architecture globale
+Application React Native CLI | +-- Firebase Authentication -> gere la
+connexion/inscription +-- Cloud Firestore -> stocke users, videos, likes, commentaires
++-- Firebase Storage -> stocke les fichiers video +-- Firebase Cloud Messaging ->
+notifications push +-- React Navigation -> navigation entre les ecrans
+
+3. Comment diviser le travail (8 personnes)
+#
+
+Role
+
+Responsabilites
+
+1
+
+Chef de projet
+
+Organise les taches, fusionne le code sur GitHub, resout les conflits
+
+2
+
+Dev Authentification
+
+Ecrans Login, Register, Logout avec Firebase Auth
+
+3
+
+Dev Fil de videos
+
+Ecran Home : FlatList vertical avec lecture video automatique
+
+4
+
+Dev Upload video
+
+Ecran Upload : choisir video (expo-image-picker), uploader sur Storage
+
+5
+
+Dev Likes & Commentaires
+
+Bouton like, modal des commentaires (Firestore)
+
+6
+
+Dev Profil
+
+Ecran Profil : afficher/modifier les infos et les videos de l'utilisateur
+
+7
+
+Dev Navigation
+
+React Navigation : Stack + Bottom Tabs + configuration globale
+
+8
+
+Dev UI/Style
+
+Mise en forme, couleurs, icones, coherence visuelle de toute l'app
+
+4. Les ecrans a creer
+• LoginScreen.tsx -> Connexion avec email + mot de passe
+• RegisterScreen.tsx -> Inscription + creation du profil dans Firestore
+• HomeScreen.tsx -> Fil de videos en defilement vertical (FlatList)
+• UploadScreen.tsx -> Choisir/enregistrer une video et la publier
+
+• ProfileScreen.tsx -> Afficher les videos et infos de l'utilisateur
+• CommentsScreen.tsx -> Modal avec les commentaires d'une video
+• DiscoverScreen.tsx (optionnel) -> Rechercher des utilisateurs ou des videos
+
+5. Structure de la base de donnees Firebase (Firestore)
+Les collections a creer dans Firestore :
+users/ {userId}/ username, email, profilePic, bio, followers, following, createdAt
+videos/ {videoId}/ userId, videoUrl, thumbnailUrl, description, likesCount, createdAt
+comments/ {commentId}/ videoId, userId, username, text, createdAt likes/ {likeId}/
+videoId, userId
+
+6. Outils et bibliotheques necessaires
+Outil / Bibliotheque
+
+Utilite
+
+React Native CLI
+
+Framework principal pour creer l'app mobile iOS & Android
+
+Node.js + npm
+
+Runtime et gestionnaire de paquets (requis pour React Native)
+
+firebase (npm)
+
+SDK Firebase : Auth + Firestore + Storage + Cloud Messaging
+
+@react-navigation/native
+
+Navigation entre les ecrans de l'application
+
+@react-navigation/bottom-tabs
+
+Barre d'onglets en bas (Home, Upload, Profile)
+
+@react-navigation/stack
+
+Navigation en pile (Login -> Home -> Details)
+
+expo-image-picker
+
+Choisir des videos depuis la galerie du telephone
+
+expo-av / react-native-video
+
+Lecture des videos dans le fil
+
+@expo/vector-icons
+
+Icones (coeur, commentaire, partage, etc.)
+
+react-native-safe-area-context
+
+Gerer le notch et les zones de securite iOS/Android
+
+dotenv / react-native-config
+
+Proteger les cles Firebase dans un fichier .env
+
+7. Les etapes — Ce soir on code !
+ETAPE 1 — Installation et configuration (Tout le monde ensemble)
+1.1 — Verifier que Node.js et les outils sont installes
+node --version # v18 ou superieur recommande npm --version npx react-native --version
+
+1.2 — Creer le projet React Native CLI
+npx react-native init TikTokClone --template react-native-template-typescript cd
+TikTokClone
+
+1.3 — Installer toutes les bibliotheques
+npm install firebase npm install @react-navigation/native @react-navigation/bottom-tabs
+@react-navigation/stack npm install react-native-screens react-native-safe-area-context
+npm install expo-image-picker expo-av @expo/vector-icons npm install react-native-config
+
+1.4 — Creer le projet Firebase
+• Aller sur : firebase.google.com
+• Cliquer sur 'Ajouter un projet'
+• Activer Authentication (Email/Mot de passe)
+• Activer Firestore Database
+• Activer Storage
+• Copier la configuration Firebase et la partager avec tout le groupe
+
+1.5 — Creer le fichier .env a la racine du projet
+FIREBASE_API_KEY=VOTRE_API_KEY FIREBASE_AUTH_DOMAIN=VOTRE_AUTH_DOMAIN
+FIREBASE_PROJECT_ID=VOTRE_PROJECT_ID FIREBASE_STORAGE_BUCKET=VOTRE_STORAGE_BUCKET
+FIREBASE_MESSAGING_SENDER_ID=VOTRE_MESSAGING_ID FIREBASE_APP_ID=VOTRE_APP_ID
+
+1.6 — Creer le fichier firebaseConfig.ts
+import { initializeApp } from 'firebase/app'; import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore'; import { getStorage } from
+'firebase/storage'; import Config from 'react-native-config'; const firebaseConfig = {
+apiKey: Config.FIREBASE_API_KEY, authDomain: Config.FIREBASE_AUTH_DOMAIN, projectId:
+Config.FIREBASE_PROJECT_ID, storageBucket: Config.FIREBASE_STORAGE_BUCKET,
+messagingSenderId: Config.FIREBASE_MESSAGING_SENDER_ID, appId: Config.FIREBASE_APP_ID,
+}; const app = initializeApp(firebaseConfig); export const auth = getAuth(app); export
+const db = getFirestore(app); export const storage = getStorage(app);
+
+ETAPE 2 — Structure des dossiers (Chef de projet)
+TikTokClone/ firebaseConfig.ts <- Configuration Firebase App.tsx <- Point d'entree
+principal .env <- Cles secretes (ne jamais mettre sur GitHub !) .gitignore <- Ignorer
+node_modules et .env src/ screens/ LoginScreen.tsx RegisterScreen.tsx HomeScreen.tsx
+UploadScreen.tsx ProfileScreen.tsx CommentsScreen.tsx components/ VideoCard.tsx <Composant d'une video dans le fil LikeButton.tsx CommentItem.tsx navigation/
+AppNavigator.tsx <- Configuration React Navigation hooks/ useAuth.ts <- Hook
+personnalise pour l'authentification utils/ theme.ts <- Couleurs et styles globaux
+
+Important : Ajouter dans .gitignore
+
+node_modules/ .env android/app/google-services.json ios/GoogleService-Info.plist
+
+ETAPE 3 — Chaque personne code son ecran
+DEV 2 — Authentification (LoginScreen.tsx & RegisterScreen.tsx)
+Ce que tu dois faire :
+• Creer un formulaire avec TextInput pour email + mot de passe
+• Utiliser createUserWithEmailAndPassword (Firebase Auth) pour l'inscription
+• Utiliser signInWithEmailAndPassword pour la connexion
+• Apres connexion, naviguer vers l'ecran Home avec navigation.replace('Home')
+• Sauvegarder l'utilisateur dans Firestore collection 'users' apres inscription
+• Afficher les erreurs Firebase avec un message lisible
+
+DEV 3 — Fil de videos (HomeScreen.tsx & VideoCard.tsx)
+Ce que tu dois faire :
+• Recuperer les videos depuis Firestore (getDocs sur collection 'videos')
+• Afficher les videos avec un FlatList vertical (paginated)
+• Chaque VideoCard prend TOUT l'ecran (height: '100%', like TikTok)
+• Utiliser expo-av pour lire la video automatiquement quand elle est visible
+• Mettre en pause les videos non visibles (onViewableItemsChanged)
+• Afficher : description, username, bouton like, bouton commentaire
+
+DEV 4 — Upload de video (UploadScreen.tsx)
+Ce que tu dois faire :
+• Utiliser expo-image-picker pour choisir une video depuis la galerie
+• Demander la permission d'acces a la galerie avec MediaLibrary.requestPermissionsAsync()
+• Uploader la video sur Firebase Storage avec uploadBytes()
+• Recuperer l'URL de telechargement avec getDownloadURL()
+• Sauvegarder dans Firestore : { userId, videoUrl, description, likesCount: 0, createdAt }
+• Afficher une barre de progression pendant l'upload
+
+DEV 5 — Likes & Commentaires (LikeButton.tsx & CommentsScreen.tsx)
+Ce que tu dois faire :
+• Likes : verifier si l'utilisateur a deja like (chercher dans collection 'likes')
+• Si pas like : addDoc dans 'likes' + incrementer likesCount dans 'videos'
+• Si deja like : deleteDoc dans 'likes' + decrementer likesCount
+• Changer la couleur du coeur selon l'etat (rouge = like, gris = pas like)
+• Commentaires : afficher les commentaires avec FlatList, permettre d'en ajouter
+• Sauvegarder le commentaire dans Firestore et rafraichir la liste
+
+DEV 6 — Profil (ProfileScreen.tsx)
+
+Ce que tu dois faire :
+• Afficher la photo de profil, le nom, la bio, nombre de followers/following
+• Afficher toutes les videos de l'utilisateur dans une grille 3 colonnes
+• Permettre de modifier le nom et la bio avec TextInput
+• Permettre de changer la photo de profil avec expo-image-picker
+• Sauvegarder les modifications avec updateDoc dans Firestore
+• Distinguer le profil de l'utilisateur connecte et les autres profils
+
+DEV 7 — Navigation (navigation/AppNavigator.tsx)
+Ce que tu dois faire :
+• Installer et configurer NavigationContainer dans App.tsx
+• Creer un Stack Navigator pour Auth (Login, Register)
+• Creer un Bottom Tab Navigator pour l'app principale (Home, Upload, Profile)
+• Gerer l'etat d'authentification : si connecte -> Tabs, sinon -> Stack Auth
+• Utiliser onAuthStateChanged (Firebase) pour detecter automatiquement la connexion
+• Ajouter des icones sur chaque onglet avec @expo/vector-icons
+
+DEV 8 — UI/Style (utils/theme.ts)
+Ce que tu dois faire :
+• Creer un fichier theme.ts avec les couleurs globales : noir, blanc, rouge TikTok (#FF0050)
+• Creer des styles communs reutilisables (boutons, textes, cartes)
+• S'assurer que tous les ecrans ont le meme look and feel
+• Ajouter des icones avec @expo/vector-icons (Ionicons recommande)
+• Gerer les safe areas (notch iOS, barre Android) avec react-native-safe-area-context
+• S'assurer que l'app est responsive sur differentes tailles d'ecran
+
+ETAPE 4 — Configurer la Navigation principale (App.tsx)
+Le Dev 7 ou le chef de projet cree ce fichier qui orchestre toute l'app :
+// App.tsx import React, { useEffect, useState } from 'react'; import {
+NavigationContainer } from '@react-navigation/native'; import { createBottomTabNavigator
+} from '@react-navigation/bottom-tabs'; import { createStackNavigator } from
+'@react-navigation/stack'; import { onAuthStateChanged } from 'firebase/auth'; import {
+auth } from './firebaseConfig'; const Tab = createBottomTabNavigator(); const Stack =
+createStackNavigator(); const App = () => { const [user, setUser] = useState(null);
+useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
+return unsubscribe; // Nettoyage }, []); return ( {user ? : } ); };
+
+Pour lancer l'application :
+# Android npx react-native run-android # iOS (macOS uniquement) cd ios && pod install &&
+cd .. npx react-native run-ios
+
+ETAPE 5 — Git : travailler sans se bloquer
+# Chaque personne cree sa propre branche git checkout -b feature/nom-de-ton-ecran #
+Exemples : git checkout -b feature/authentification git checkout -b feature/fil-videos
+git checkout -b feature/upload git checkout -b feature/likes-commentaires # Quand tu as
+fini, tu pousses ton travail git add . git commit -m 'Ajout de l ecran de connexion' git
+push origin feature/authentification # IMPORTANT : Ne jamais pousser le fichier .env sur
+GitHub ! # Partager les cles Firebase via WhatsApp/Telegram uniquement
+
+ETAPE 6 — Tester sur vos telephones
+• Connecter votre telephone Android en USB avec le mode developpeur active
+• Lancer : npx react-native run-android (votre telephone apparait comme cible)
+• Pour iOS : utiliser le simulateur Xcode ou un iPhone avec votre compte Apple Developer
+• Utiliser aussi Expo Go pour des tests rapides (si vous utilisez Expo modules)
+• Tester sur plusieurs tailles d'ecran differentes
+
+8. Regles importantes pour ce soir
+Regle
+
+Detail
+
+Branches Git
+
+Tout le monde sur sa propre branche — JAMAIS directement sur 'main'
+
+Fichier .env
+
+Ne JAMAIS mettre le .env sur GitHub — partager les cles autrement
+
+firebaseConfig.ts
+
+Tout le monde doit avoir la meme configuration Firebase
+
+TypeScript
+
+Utiliser TypeScript (.tsx / .ts) pour eviter les bugs — pas de .js
+
+Communication
+
+Si tu es bloque(e) plus de 15 minutes, demande de l'aide immediatement
+
+Structure dossiers
+
+Respecter la structure src/screens, src/components, src/navigation
+
+Code des autres
+
+Ne pas modifier le code d'un autre sans lui demander d'abord
+
+node_modules
+
+Ne jamais envoyer node_modules sur GitHub — utiliser npm install
+
+Bonne nuit de code a toute l'equipe !
+Si vous etes bloques sur une etape, revenez poser vos questions. Vous pouvez le faire !
+
+

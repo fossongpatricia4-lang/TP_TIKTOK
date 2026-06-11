@@ -88,7 +88,8 @@ const RegisterScreen = ({ navigation }: any) => {
         createdAt: serverTimestamp(),
       });
 
-      navigation.replace('Home');
+      // Firebase va déclencher onAuthStateChanged dans App.tsx
+      // qui basculera automatiquement vers AppNavigator
     } catch (err: any) {
       setError(getFirebaseErrorMessage(err.code));
       triggerShake();
